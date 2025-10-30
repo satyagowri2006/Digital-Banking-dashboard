@@ -1,0 +1,37 @@
+.sidebar {
+  width: 250px;
+  background-color: #263238;
+  color: white;
+  padding: 20px 0;
+  min-height: calc(100vh - 60px);
+}
+
+.sidebar-menu {
+  list-style: none;
+}
+
+.sidebar-menu li {
+  margin: 5px 0;
+}
+
+.sidebar-menu li a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.sidebar-menu li a:hover {
+  background-color: #37474f;
+}
+
+.sidebar-menu li.active a {
+  background-color: #1976d2;
+}
+
+.sidebar-menu .icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
