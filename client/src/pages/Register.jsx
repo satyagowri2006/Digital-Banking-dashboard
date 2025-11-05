@@ -4,7 +4,13 @@ import { register } from '../api/authApi';
 import './Auth.css';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    password: '' 
+  });
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -17,6 +23,13 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // ✅ Basic phone validation (10 digits only)
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setError('Phone number must be 10 digits');
+      setLoading(false);
+      return;
+    }
 
     try {
       await register(formData);
@@ -32,7 +45,7 @@ const Register = () => {
 
   return (
     <div className="auth-page">
-      {/* Same background as Login */}
+      {/* Background UI same as Login */}
       <div className="auth-background">
         <div className="preview-dashboard">
           <div className="preview-navbar">
@@ -99,6 +112,7 @@ const Register = () => {
                 className="auth-input"
               />
             </div>
+
             <div className="form-group">
               <label>📧 Email</label>
               <input
@@ -111,6 +125,21 @@ const Register = () => {
                 className="auth-input"
               />
             </div>
+
+            <div className="form-group">
+              <label>📱 Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                placeholder="Enter 10-digit phone number"
+                maxLength="10"
+                className="auth-input"
+              />
+            </div>
+
             <div className="form-group">
               <label>🔒 Password</label>
               <input
@@ -124,6 +153,7 @@ const Register = () => {
                 className="auth-input"
               />
             </div>
+
             <button type="submit" className="btn-auth" disabled={loading}>
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>

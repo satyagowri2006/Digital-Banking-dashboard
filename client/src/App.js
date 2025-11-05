@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import ProtectedRoute from './components/ProtectedRoute';
+import Wallet from './pages/Wallet'; // Adjust path if needed
 
 // Auth pages
 import Login from './pages/Login';
@@ -58,6 +59,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/wallet"
+  element={
+    <ProtectedRoute>
+      <Wallet />
+    </ProtectedRoute>
+  }
+/>
+
         <Route
           path="/accounts"
           element={

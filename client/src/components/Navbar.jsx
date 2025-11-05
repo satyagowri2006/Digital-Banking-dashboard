@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser } from '../state/userSlice';
 import './Navbar.css';
@@ -13,10 +13,10 @@ const Navbar = () => {
     // Clear localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
+
     // Clear Redux state
     dispatch(clearUser());
-    
+
     // Redirect to login
     navigate('/login');
   };
@@ -27,7 +27,13 @@ const Navbar = () => {
         <h2>🏦 Banking Dashboard</h2>
       </div>
       <div className="navbar-user">
-        <span>Welcome, {user?.name || 'User'}</span>
+        <span>
+          Welcome, {user?.name || user?.firstName || user?.username || 'User'}
+        </span>
+        <br />
+
+        
+
         <button onClick={handleLogout} className="btn-logout">
           Logout
         </button>

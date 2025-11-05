@@ -13,6 +13,10 @@ const userSchema = mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    phone: {
+      type: String,
+      required: [true, 'Please add a phone number'],
+    },
     password: {
       type: String,
       required: [true, 'Please add a password'],
@@ -23,7 +27,6 @@ const userSchema = mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
-    phone: String,
     address: String,
     dateOfBirth: Date,
   },
@@ -32,16 +35,14 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// Hash password before saving
+// Hash password before save
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
-  }
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Compare password method
+// Password matching
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

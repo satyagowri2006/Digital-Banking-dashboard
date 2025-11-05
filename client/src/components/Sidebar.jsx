@@ -13,6 +13,7 @@ const Sidebar = () => {
     { path: '/goals', label: 'Goals', icon: '🎯' },
     { path: '/loans', label: 'Loans', icon: '💵' },
     { path: '/reports', label: 'Reports', icon: '📈' },
+    { path: '/wallet', label: 'Wallet', icon: '💳' },  // Add Wallet here as a menu item
   ];
 
   return (

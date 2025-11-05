@@ -2,71 +2,65 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwtUtils');
 
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
+// @desc Register new user
+// @route POST /api/auth/register
+// @access Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, phone, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!name || !email || !phone || !password) {
     res.status(400);
-    throw new Error('Please add all fields');
+    throw new Error('Please fill all fields');
   }
 
-  // Check if user exists
+  // Check if email exists
   const userExists = await User.findOne({ email });
-
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error('User with this email already exists');
   }
 
-  // Create user
   const user = await User.create({
     name,
     email,
+    phone,
     password,
   });
 
-  if (user) {
-    res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
-  }
+  res.status(201).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    token: generateToken(user._id),
+  });
 });
 
-// @desc    Authenticate a user
-// @route   POST /api/auth/login
-// @access  Public
+// @desc Login with only email
+// @route POST /api/auth/login
+// @access Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Check for user email
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
     res.json({
-      _id: user.id,
+      _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      phone: user.phone,
       token: generateToken(user._id),
     });
   } else {
     res.status(400);
-    throw new Error('Invalid credentials');
+    throw new Error('Invalid email or password');
   }
 });
 
-// @desc    Get user data
-// @route   GET /api/auth/me
-// @access  Private
+// @desc Get Logged-in User
+// @route GET /api/auth/me
+// @access Private
 const getMe = asyncHandler(async (req, res) => {
   res.status(200).json(req.user);
 });
