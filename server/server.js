@@ -22,21 +22,27 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:3000',                                 // Local Development
   'https://digital-banking-dashboard.vercel.app',         // Vercel Frontend
-  process.env.CLIENT_URL                                   // If set in Render
+  process.env.CLIENT_URL                                   // Optional from Render
 ].filter(Boolean);
 
-// ✅ CORS Middleware
-app.use(cors({
+// ✅ FIXED CORS CONFIG (handles preflight + headers)
+const corsOptions = {
   origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // ✅ Handle all preflight OPTIONS requests
 
 // ✅ Socket.io Setup with CORS support
 const io = socketIo(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST'],
+    methods: ["GET", "POST"],
     credentials: true
   }
 });
