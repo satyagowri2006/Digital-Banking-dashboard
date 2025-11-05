@@ -18,38 +18,43 @@ require('./services/emailService');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io Setup
+// ✅ Allowed Frontend Origins
+const allowedOrigins = [
+  'http://localhost:3000',                                 // Local Development
+  'https://digital-banking-dashboard.vercel.app',         // Vercel Frontend
+  process.env.CLIENT_URL                                   // If set in Render
+].filter(Boolean);
+
+// ✅ CORS Middleware
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+// ✅ Socket.io Setup with CORS support
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
 });
 
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
-
+// Parse JSON bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Make io accessible to routes
 app.set('io', io);
 
-// ✅ ROUTES — order matters!
-
-// Auth routes must load BEFORE any protected routes
+// ✅ ROUTES (Order matters)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
-// Wallet Routes (Protected Routes)
 const walletRoutes = require('./routes/walletRoutes');
 app.use('/api/wallet', walletRoutes);
 
-// Other Protected/Feature Routes
 app.use('/api/accounts', require('./routes/accountRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/budgets', require('./routes/budgetRoutes'));
@@ -58,19 +63,19 @@ app.use('/api/loans', require('./routes/loanRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 
-// Health Check
+// ✅ Health Check Route
 app.get('/', (req, res) => {
-  res.json({ message: '✅ Banking Dashboard API is running' });
+  res.json({ message: '✅ Banking Dashboard API is running...' });
 });
 
 // Error Handler
 app.use(errorHandler);
 
-// Socket.io connection
+// Socket.io Events
 require('./sockets/notificationSocket')(io);
 
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Allowed Origins:`, allowedOrigins);
 });
