@@ -6,7 +6,7 @@ export const getAccounts = async () => {
 };
 
 export const createAccount = async (accountData) => {
-  const response = await API.post('/accounts', accountData);
+  const response = await API.post('/accounts', accountData, { withCredentials: true });
   return response.data;
 };
 
