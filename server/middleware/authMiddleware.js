@@ -10,16 +10,20 @@ const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
-      // Get token from header
       token = req.headers.authorization.split(' ')[1];
 
-      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Attach user object (excluding password) to req.user
-      req.user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded.id).select('-password');
 
-      next();
+      if (!user) {
+        res.status(401);
+        throw new Error('User no longer exists');
+      }
+
+      req.user = user;
+
+      return next();
     } catch (error) {
       console.error('Auth middleware error:', error);
       res.status(401);
@@ -33,13 +37,4 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(401);
-    throw new Error('Not authorized as admin');
-  }
-};
-
-module.exports = { protect, admin };
+module.exports = { protect };

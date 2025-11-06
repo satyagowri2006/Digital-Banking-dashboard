@@ -1,76 +1,56 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
-// 1) Load environment variables first
+// Load environment variables first
 dotenv.config();
 
-// 2) Connect to MongoDB
+// Connect to MongoDB
 connectDB();
 
-// 3) Load email service (if used)
+// Initialize email service
 require('./services/emailService');
 
 const app = express();
-
-// ✅ Fix for reverse proxy IP issues (Render, Vercel, Railway)
-app.set('trust proxy', 1);
-
 const server = http.createServer(app);
 
-// 4) Allowed origins (local + Vercel + optional env)
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://digital-banking-dashboard.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
+// Trust proxy (helps with cookies when using credentials)
+app.set('trust proxy', 1);
 
-// 5) Manual CORS middleware — handles ALL requests including OPTIONS
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
+// Allowed local frontend
+const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:3000';
 
-  res.header('Vary', 'Origin'); // Important for proxies/caching
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
-  );
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
+// CORS (Local)
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
-  // Reply immediately to OPTIONS preflight
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
-// 6) Socket.io with explicit CORS
-const io = socketIo(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
-
-// 7) Request body parsers
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 8) Make io available inside routes
+// Socket.io Setup
+const io = socketIo(server, {
+  cors: {
+    origin: allowedOrigin,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  }
+});
+
+// Make io accessible in routes
 app.set('io', io);
 
-// 9) Routes (order matters)
+// ✅ ROUTES — order is correct
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
@@ -82,20 +62,20 @@ app.use('/api/loans', require('./routes/loanRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 
-// 10) Health check route
+// Health Check
 app.get('/', (req, res) => {
-  res.json({ message: '✅ Banking Dashboard API is running...' });
+  res.json({ message: '✅ Local Banking API is running' });
 });
 
-// 11) Error handler
+// Error Handler
 app.use(errorHandler);
 
-// 12) Socket events
+// Socket.io listener
 require('./sockets/notificationSocket')(io);
 
-// 13) Start server
+// Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log('🌍 Allowed Origins:', allowedOrigins);
+  console.log(`🚀 Local Server running at http://localhost:${PORT}`);
+  console.log(`🌍 Allowed Origin: ${allowedOrigin}`);
 });
